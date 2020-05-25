@@ -2,7 +2,6 @@ import pygame
 import sys
 import random
 import time
-import threading
 
 pygame.init()
 
@@ -16,16 +15,18 @@ ORANGE = (237, 125, 49)
 TOURKISE = (0, 255, 255)
 YELLOW = (255, 192, 0)
 
-sq_size = 30
+SQ_SIZE = 30
 
 font = pygame.font.Font(pygame.font.get_default_font(), 32)
 
 
 class Shape:
-    def __init__(self, name, body, color, axis=[0, 0]):
+    def __init__(self, name, body, color, x=5, y=0, axis=[0, 0]):
         self.name = name
         self.body = body
         self.color = color
+        self.x = x
+        self.y = y
         self.axis = axis
 
     def rotate(self):
@@ -56,21 +57,21 @@ def print_board(screen):
     for row in range(20):
         for col in range(10):
             color = board[row][col]
-            pygame.draw.rect(screen, color, (col * sq_size + buf_x, row * sq_size + buf_y, sq_size, sq_size))
+            pygame.draw.rect(screen, color, (col * SQ_SIZE + buf_x, row * SQ_SIZE + buf_y, SQ_SIZE, SQ_SIZE))
     # narišem belo mrežo čez vse
     for row in range(20):
         for col in range(10):
-            pygame.draw.rect(screen, WHITE, (col * sq_size + buf_x, row * sq_size + buf_y, sq_size, sq_size), 1)
+            pygame.draw.rect(screen, WHITE, (col * SQ_SIZE + buf_x, row * SQ_SIZE + buf_y, SQ_SIZE, SQ_SIZE), 1)
     pygame.display.update()
 
 
 def check_below():
-    global board, block, block_x, block_y
+    global board, block
 
     flag = False
     for i in block.body:
-        x = i[0] + block_x
-        y_next = i[1] + block_y + 1
+        x = i[0] + block.x
+        y_next = i[1] + block.y + 1
         if y_next > 19:
             flag = True
         elif board[y_next][x] != BLACK:
@@ -79,12 +80,12 @@ def check_below():
 
 
 def check_left():
-    global board, block, block_x, block_y
+    global board, block
 
     flag = False
     for i in block.body:
-        x_next = i[0] + block_x - 1
-        y = i[1] + block_y
+        x_next = i[0] + block.x - 1
+        y = i[1] + block.y
         if x_next < 0:
             flag = True
         elif board[y][x_next] != BLACK:
@@ -93,12 +94,12 @@ def check_left():
 
 
 def check_right():
-    global board, block, block_x, block_y
+    global board, block
 
     flag = False
     for i in block.body:
-        x_next = i[0] + block_x + 1
-        y = i[1] + block_y
+        x_next = i[0] + block.x + 1
+        y = i[1] + block.y
         if x_next > 9:
             flag = True
         elif board[y][x_next] != BLACK:
@@ -107,13 +108,13 @@ def check_right():
 
 
 def check_rotate():
-    global board, block, block_x, block_y
+    global board, block
 
     flag = False
     block.rotate()
     for i in block.body:
-        x_next = i[0] + block_x
-        y_next = i[1] + block_y
+        x_next = i[0] + block.x
+        y_next = i[1] + block.y
         if x_next > 9 or x_next < 0:
             flag = True
         if y_next > 19:
@@ -128,31 +129,31 @@ def check_rotate():
 
 
 def show_block_on_board():
-    global board, block, block_x, block_y, game, next_block
+    global board, block, game, next_block
     buf_x = 100
     buf_y = 20
     sq_size = 30
     for i in block.body:
-        x = i[0] + block_x
-        y = i[1] + block_y
+        x = i[0] + block.x
+        y = i[1] + block.y
         pygame.draw.rect(screen, block.color, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size))
         pygame.draw.rect(screen, WHITE, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size), 1)
     # preveri če je še prostor na polju vrstico nižje in če ni izven okvira (y_next>19)
     flag = check_below()
     if flag == True:
         for i in block.body:
-            x = i[0] + block_x
-            y = i[1] + block_y
+            x = i[0] + block.x
+            y = i[1] + block.y
             board[y][x] = block.color
         # nov blok
-        if block_y > 1:
+        if block.y > 1:
             # nov lik
             block = next_block
             next_block = random.choice(blocks)
             draw_next_block()
-
-            block_y = 0
-            block_x = 5
+# mogoče ni treba
+            block.y = 0
+            block.x = 5
         else:
             game = False
             print("GAME OVER")
@@ -165,7 +166,7 @@ def show_block_on_board():
 
 
 def check_rows():
-    global board, score, block, block_x, block_y, next_block
+    global board, score, block, next_block
 
     for row in range(20):
         full_row = True
@@ -187,8 +188,8 @@ def check_rows():
             next_block = random.choice(blocks)
             draw_next_block()
 
-            block_x = 5
-            block_y = 0
+            block.x = 5
+            block.y = 0
 
 
 def show_score():
@@ -210,13 +211,12 @@ def draw_next_block():
     for i in next_block.body:
         x = i[0]
         y = i[1]
-        pygame.draw.rect(screen, next_block.color, (x * sq_size + 520, y * sq_size + 180, sq_size, sq_size))
-        pygame.draw.rect(screen, WHITE, (x * sq_size + 520, y * sq_size + 180, sq_size, sq_size), 1)
+        pygame.draw.rect(screen, next_block.color, (x * SQ_SIZE + 520, y * SQ_SIZE + 180, SQ_SIZE, SQ_SIZE))
+        pygame.draw.rect(screen, WHITE, (x * SQ_SIZE + 520, y * SQ_SIZE + 180, SQ_SIZE, SQ_SIZE), 1)
     pygame.display.update()
 
 
-block_x = 5
-block_y = 1
+
 
 score = 0
 
@@ -227,6 +227,7 @@ screen = pygame.display.set_mode((width, height))
 screen.fill(BLACK)
 
 block = random.choice(blocks)
+block.y=1
 next_block = random.choice(blocks)
 draw_next_block()
 
@@ -248,11 +249,11 @@ while game:
             if event.key == pygame.K_LEFT:
                 flag = check_left()
                 if flag == False:
-                    block_x = block_x - 1
+                    block.x = block.x - 1
             if event.key == pygame.K_RIGHT:
                 flag = check_right()
                 if flag == False:
-                    block_x = block_x + 1
+                    block.x = block.x + 1
             if event.key == pygame.K_UP:
                 flag = check_rotate()
                 if flag == False:
@@ -263,9 +264,8 @@ while game:
             if event.key == pygame.K_DOWN:
                 FPS = 2
 
-
     print_board(screen)
     show_score()
     show_block_on_board()
     check_rows()
-    block_y += 1
+    block.y += 1
