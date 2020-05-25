@@ -65,8 +65,7 @@ def print_board(screen):
     pygame.display.update()
 
 
-def check_below():
-    global board, block
+def check_below(board, block):
 
     flag = False
     for i in block.body:
@@ -79,8 +78,7 @@ def check_below():
     return flag
 
 
-def check_left():
-    global board, block
+def check_left(board, block):
 
     flag = False
     for i in block.body:
@@ -93,8 +91,7 @@ def check_left():
     return flag
 
 
-def check_right():
-    global board, block
+def check_right(board, block):
 
     flag = False
     for i in block.body:
@@ -107,25 +104,29 @@ def check_right():
     return flag
 
 
-def check_rotate():
-    global board, block
+def check_rotate(board, block):
 
-    flag = False
     block.rotate()
     for i in block.body:
         x_next = i[0] + block.x
         y_next = i[1] + block.y
-        if x_next > 9 or x_next < 0:
-            flag = True
-        if y_next > 19:
-            flag = True
+        print(y_next)
+        print(x_next)
+        if x_next > 9 or x_next < 0 or y_next > 19 :
+            block.rotate()
+            block.rotate()
+            block.rotate()
+            return True
         if board[y_next][x_next] != BLACK:
-            flag = True
-            # zavrtim 3x da pridem nazaj v orignal
+            block.rotate()
+            block.rotate()
+            block.rotate()
+            return True
+    # zavrtim 3x da pridem nazaj v orignal
     block.rotate()
     block.rotate()
     block.rotate()
-    return flag
+    return False
 
 
 def show_block_on_board():
@@ -139,7 +140,7 @@ def show_block_on_board():
         pygame.draw.rect(screen, block.color, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size))
         pygame.draw.rect(screen, WHITE, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size), 1)
     # preveri če je še prostor na polju vrstico nižje in če ni izven okvira (y_next>19)
-    flag = check_below()
+    flag = check_below(board, block)
     if flag == True:
         for i in block.body:
             x = i[0] + block.x
@@ -151,7 +152,6 @@ def show_block_on_board():
             block = next_block
             next_block = random.choice(blocks)
             draw_next_block()
-# mogoče ni treba
             block.y = 0
             block.x = 5
         else:
@@ -247,15 +247,15 @@ while game:
             sys.exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                flag = check_left()
+                flag = check_left(board,block)
                 if flag == False:
                     block.x = block.x - 1
             if event.key == pygame.K_RIGHT:
-                flag = check_right()
+                flag = check_right(board, block)
                 if flag == False:
                     block.x = block.x + 1
             if event.key == pygame.K_UP:
-                flag = check_rotate()
+                flag = check_rotate(board, block)
                 if flag == False:
                     block.rotate()
             if event.key == pygame.K_DOWN:
