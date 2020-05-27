@@ -21,16 +21,20 @@ font = pygame.font.Font(pygame.font.get_default_font(), 32)
 
 
 class Shape:
-    def __init__(self, name, body, color, x=5, y=0, axis=[0, 0]):
+    def __init__(self, name, body, color, x=5, y=0, axis=[0, 0], rotations=0):
         self.name = name
         self.body = body
         self.color = color
         self.x = x
         self.y = y
         self.axis = axis
+        self.rotations = rotations
 
     def rotate(self):
         if self.name != "O":
+            self.rotations += 1
+            if self.rotations == 4:
+                self.rotations = 0
             for i in range(len(self.body)):
                 if self.body[i] != self.axis:
                     # zamenjam x in y ter pomnožim nov x, da mu spremenim predznak
@@ -46,7 +50,7 @@ BLOCK_J = Shape("J", [[0, 1], [0, 0], [0, -1], [-1, -1]], PURPLE)
 BLOCK_Z = Shape("Z", [[0, -1], [0, 0], [-1, 0], [-1, 1]], RED)
 BLOCK_S = Shape("S", [[-1, -1], [0, 0], [-1, 0], [0, 1]], TOURKISE)
 BLOCK_T = Shape("T", [[-1, 0], [0, 0], [1, 0], [0, -1]], ORANGE)
-BLOCK_O = Shape("O", [[0, 1], [0, 0], [-1, 0], [-1, 1]], YELLOW)
+BLOCK_O = Shape("O", [[0, -1], [0, 0], [-1, -1], [-1, 0]], YELLOW)
 
 blocks = (BLOCK_I, BLOCK_L, BLOCK_J, BLOCK_Z, BLOCK_S, BLOCK_T, BLOCK_O)
 
@@ -66,7 +70,6 @@ def print_board(screen):
 
 
 def check_below(board, block):
-
     flag = False
     for i in block.body:
         x = i[0] + block.x
@@ -79,7 +82,6 @@ def check_below(board, block):
 
 
 def check_left(board, block):
-
     flag = False
     for i in block.body:
         x_next = i[0] + block.x - 1
@@ -92,7 +94,6 @@ def check_left(board, block):
 
 
 def check_right(board, block):
-
     flag = False
     for i in block.body:
         x_next = i[0] + block.x + 1
@@ -105,14 +106,13 @@ def check_right(board, block):
 
 
 def check_rotate(board, block):
-
     block.rotate()
     for i in block.body:
         x_next = i[0] + block.x
         y_next = i[1] + block.y
         print(y_next)
         print(x_next)
-        if x_next > 9 or x_next < 0 or y_next > 19 :
+        if x_next > 9 or x_next < 0 or y_next > 19:
             block.rotate()
             block.rotate()
             block.rotate()
@@ -150,8 +150,11 @@ def show_block_on_board():
             # nov lik
             block = next_block
             next_block = random.choice(blocks)
+            # rotiram block, da se vrne v začetni položaj
+            while next_block.rotations != 0:
+                next_block.rotate()
             draw_next_block()
-            block.y = 0
+            block.y = 1
             block.x = 5
         else:
             game = False
@@ -183,12 +186,11 @@ def check_rows():
             board.insert(0, [BLACK] * 10)
 
             # nov lik
-            block = next_block
-            next_block = random.choice(blocks)
-            draw_next_block()
-
-            block.x = 5
-            block.y = 0
+            # block = next_block
+            # next_block = random.choice(blocks)
+            # draw_next_block()
+            # block.y = 0
+            # block.x = 5
 
 
 def show_score():
@@ -215,8 +217,6 @@ def draw_next_block():
     pygame.display.update()
 
 
-
-
 score = 0
 
 pygame.init()
@@ -226,7 +226,7 @@ screen = pygame.display.set_mode((width, height))
 screen.fill(BLACK)
 
 block = random.choice(blocks)
-block.y=1
+block.y = 1
 next_block = random.choice(blocks)
 draw_next_block()
 
@@ -235,33 +235,35 @@ board = [[BLACK] * 10 for i in range(20)]
 game = True
 clock = pygame.time.Clock()
 
-
-timer_start=time.time()
+timer_start = time.time()
 while game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
-                if check_left(board,block)==False:
+                if check_left(board, block) == False:
                     block.x = block.x - 1
             if event.key == pygame.K_RIGHT:
-                if check_right(board, block)==False:
+                if check_right(board, block) == False:
                     block.x = block.x + 1
             if event.key == pygame.K_UP:
-                if check_rotate(board, block)==False:
+                if check_rotate(board, block) == False:
                     block.rotate()
             if event.key == pygame.K_DOWN:
-                if check_below(board, block)==False:
+                if check_below(board, block) == False:
+                    block.y += 1
+            if event.key == pygame.K_SPACE:
+                while check_below(board, block) == False:
                     block.y += 1
             print_board(screen)
             show_block_on_board()
             show_score()
             check_rows()
-    if (time.time()-timer_start)>1:
+    if (time.time() - timer_start) > 1:
         print_board(screen)
         show_score()
         show_block_on_board()
         check_rows()
         block.y += 1
-        timer_start=time.time()
+        timer_start = time.time()
