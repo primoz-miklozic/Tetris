@@ -140,8 +140,7 @@ def show_block_on_board():
         pygame.draw.rect(screen, block.color, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size))
         pygame.draw.rect(screen, WHITE, (x * sq_size + buf_x, y * sq_size + buf_y, sq_size, sq_size), 1)
     # preveri če je še prostor na polju vrstico nižje in če ni izven okvira (y_next>19)
-    flag = check_below(board, block)
-    if flag == True:
+    if check_below(board, block) == True:
         for i in block.body:
             x = i[0] + block.x
             y = i[1] + block.y
@@ -235,37 +234,34 @@ draw_next_block()
 board = [[BLACK] * 10 for i in range(20)]
 game = True
 clock = pygame.time.Clock()
-FPS = 2
 
-pygame.key.set_repeat(10)
 
+timer_start=time.time()
 while game:
-    clock.tick(FPS)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
-                flag = check_left(board,block)
-                if flag == False:
+                if check_left(board,block)==False:
                     block.x = block.x - 1
             if event.key == pygame.K_RIGHT:
-                flag = check_right(board, block)
-                if flag == False:
+                if check_right(board, block)==False:
                     block.x = block.x + 1
             if event.key == pygame.K_UP:
-                flag = check_rotate(board, block)
-                if flag == False:
+                if check_rotate(board, block)==False:
                     block.rotate()
             if event.key == pygame.K_DOWN:
-                FPS = 10
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_DOWN:
-                FPS = 2
-
-    print_board(screen)
-    show_score()
-    show_block_on_board()
-    check_rows()
-    block.y += 1
+                if check_below(board, block)==False:
+                    block.y += 1
+            print_board(screen)
+            show_block_on_board()
+            show_score()
+            check_rows()
+    if (time.time()-timer_start)>1:
+        print_board(screen)
+        show_score()
+        show_block_on_board()
+        check_rows()
+        block.y += 1
+        timer_start=time.time()
